@@ -692,18 +692,6 @@ const Canvas: React.FC<CanvasProps> = ({ id = 'canvas', onCanvasReady }) => {
           onDoubleClick={handleDoubleClick}
         />
       </div>
-
-      {/* Instructions */}
-      <div className="text-sm text-gray-600 bg-gray-50 rounded-md p-3">
-        <strong>Hướng dẫn sử dụng:</strong>
-        <ul className="mt-2 space-y-1">
-          <li>• <strong>Click vào canvas</strong> để focus, sau đó nhấn Ctrl+V để paste ảnh</li>
-          <li>• Click chọn text và dùng nút "Xóa" hoặc phím Delete để xóa</li>
-          <li>• Double-click vào text để chỉnh sửa</li>
-          <li>• Kéo text để di chuyển vị trí</li>
-          <li>• Nhấn Escape để hủy thao tác hiện tại</li>
-        </ul>
-      </div>
     </div>
   )
 }
