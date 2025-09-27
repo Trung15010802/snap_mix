@@ -490,7 +490,6 @@ const Canvas: React.FC<CanvasProps> = ({ id = 'canvas', onCanvasReady }) => {
     <div className="flex flex-col gap-4 p-4">
       {/* Canvas title */}
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold">Canvas {id}</h3>
         {isFocused && (
           <span className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded">
             Đang focus - Paste ảnh ở đây

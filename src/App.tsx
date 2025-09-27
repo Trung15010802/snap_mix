@@ -1,5 +1,5 @@
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { ToastProvider } from '@/components/ui/toast'
 import Canvas from '@/components/Canvas'
 import DualCanvas from '@/components/DualCanvas'
@@ -21,30 +21,18 @@ function App(): JSX.Element {
             <TabsTrigger value="single">Chỉnh sửa 1 ảnh</TabsTrigger>
             <TabsTrigger value="dual">Chỉnh sửa 2 ảnh</TabsTrigger>
           </TabsList>
-          
+
           <TabsContent value="single">
             <Card>
-              <CardHeader>
-                <CardTitle>Chỉnh sửa ảnh đơn</CardTitle>
-              </CardHeader>
               <CardContent>
-                <div className="text-sm text-muted-foreground mb-4">
-                  Dán ảnh từ clipboard (Ctrl+V) hoặc sử dụng các công cụ để chỉnh sửa
-                </div>
                 <Canvas />
               </CardContent>
             </Card>
           </TabsContent>
-          
+
           <TabsContent value="dual">
             <Card>
-              <CardHeader>
-                <CardTitle>Chỉnh sửa và ghép 2 ảnh</CardTitle>
-              </CardHeader>
               <CardContent>
-                <div className="text-sm text-muted-foreground mb-4">
-                  Dán ảnh vào từng khung, chỉnh sửa và ghép lại thành một ảnh duy nhất
-                </div>
                 <DualCanvas />
               </CardContent>
             </Card>
