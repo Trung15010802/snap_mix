@@ -1,24 +1,35 @@
 import React, { useRef, useState } from 'react';
 import Canvas from './Canvas';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import { mergeImages, downloadImage, copyToClipboard } from '@/lib/utils';
 
-const DualCanvas = () => {
-  const leftCanvasRef = useRef(null);
-  const rightCanvasRef = useRef(null);
-  const [showExportDialog, setShowExportDialog] = useState(false);
-  const [mergedImageUrl, setMergedImageUrl] = useState(null);
-  const [exportStatus, setExportStatus] = useState('');
+const DualCanvas: React.FC = () => {
+  // canvas element refs
+  const leftCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const rightCanvasRef = useRef<HTMLCanvasElement | null>(null);
 
-  const handleLeftCanvasReady = (canvas) => {
+  // states
+  const [showExportDialog, setShowExportDialog] = useState<boolean>(false);
+  const [mergedImageUrl, setMergedImageUrl] = useState<string | null>(null);
+  const [exportStatus, setExportStatus] = useState<string>('');
+
+  // when child Canvas is ready
+  const handleLeftCanvasReady = (canvas: HTMLCanvasElement) => {
     leftCanvasRef.current = canvas;
   };
 
-  const handleRightCanvasReady = (canvas) => {
+  const handleRightCanvasReady = (canvas: HTMLCanvasElement) => {
     rightCanvasRef.current = canvas;
   };
 
+  // merge two canvases
   const handleMergeImages = () => {
     if (!leftCanvasRef.current || !rightCanvasRef.current) {
       alert('Vui lòng thêm ảnh vào cả hai khung trước khi ghép');
@@ -30,24 +41,26 @@ const DualCanvas = () => {
     setShowExportDialog(true);
   };
 
+  // save image
   const handleSaveToDevice = () => {
     if (!mergedImageUrl) return;
-    
+
     downloadImage(mergedImageUrl, 'snap-mix-merged.png');
     setExportStatus('Đã lưu ảnh thành công!');
-    
+
     setTimeout(() => {
       setExportStatus('');
     }, 2000);
   };
 
+  // copy image to clipboard
   const handleCopyToClipboard = async () => {
     if (!mergedImageUrl) return;
-    
+
     try {
       await copyToClipboard(mergedImageUrl);
       setExportStatus('Đã copy ảnh vào clipboard!');
-      
+
       setTimeout(() => {
         setExportStatus('');
       }, 2000);
@@ -79,28 +92,24 @@ const DualCanvas = () => {
           <DialogHeader>
             <DialogTitle>Xuất ảnh đã ghép</DialogTitle>
           </DialogHeader>
-          
+
           <div className="flex flex-col items-center gap-4 py-4">
             {mergedImageUrl && (
-              <img 
-                src={mergedImageUrl} 
-                alt="Ảnh đã ghép" 
+              <img
+                src={mergedImageUrl}
+                alt="Ảnh đã ghép"
                 className="max-w-full max-h-[300px] border rounded-md"
               />
             )}
-            
+
             {exportStatus && (
               <div className="text-green-600 font-medium">{exportStatus}</div>
             )}
           </div>
-          
+
           <DialogFooter className="flex justify-between sm:justify-between">
-            <Button onClick={handleSaveToDevice}>
-              Lưu xuống máy
-            </Button>
-            <Button onClick={handleCopyToClipboard}>
-              Copy vào Clipboard
-            </Button>
+            <Button onClick={handleSaveToDevice}>Lưu xuống máy</Button>
+            <Button onClick={handleCopyToClipboard}>Copy vào Clipboard</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
