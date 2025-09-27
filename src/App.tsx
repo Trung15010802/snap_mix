@@ -1,5 +1,5 @@
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
-import { Card, CardContent } from '@/components/ui/card'
+import { Card } from '@/components/ui/card'
 import { ToastProvider } from '@/components/ui/toast'
 import Canvas from '@/components/Canvas'
 import DualCanvas from '@/components/DualCanvas'
@@ -17,25 +17,19 @@ function App(): JSX.Element {
         </header>
 
         <Tabs defaultValue="single" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-8">
+          <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="single">Chỉnh sửa 1 ảnh</TabsTrigger>
             <TabsTrigger value="dual">Chỉnh sửa 2 ảnh</TabsTrigger>
           </TabsList>
 
           <TabsContent value="single">
             <Card>
-              <CardContent>
                 <Canvas />
-              </CardContent>
             </Card>
           </TabsContent>
 
           <TabsContent value="dual">
-            <Card>
-              <CardContent>
-                <DualCanvas />
-              </CardContent>
-            </Card>
+            <DualCanvas />
           </TabsContent>
         </Tabs>
       </div>
