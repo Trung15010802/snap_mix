@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "homepage": "https://github.com/Trung15010802/snap_mix",
+  "homepage": "https://trung15010802.github.io/snap_mix/",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
