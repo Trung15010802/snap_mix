@@ -9,4 +9,5 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  base: "/snap_mix/", // 👈 quan trọng khi deploy GitHub Pages
 })
