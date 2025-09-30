@@ -1,8 +1,8 @@
 import { useRef, useState, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Slider } from '@/components/ui/slider'
-import { Trash2, Edit, Type, PenTool, Upload, Save } from 'lucide-react'
-import { cn } from '@/lib/utils'
+// import { Trash2, Edit, Type, PenTool, Upload, Save } from 'lucide-react' (unused)
+// import { cn } from '@/lib/utils' (unused)
 
 // Type definitions
 interface TextObject {
@@ -23,6 +23,30 @@ type Tool = 'pen' | 'text' | null
 interface CanvasProps {
   id?: string
   onCanvasReady?: (canvas: HTMLCanvasElement) => void
+  // Tool states from parent
+  tool?: 'pen' | 'text' | null
+  onToolChange?: (tool: 'pen' | 'text' | null) => void
+  // Pen settings
+  penColor?: string
+  onPenColorChange?: (color: string) => void
+  penSize?: number
+  onPenSizeChange?: (size: number) => void
+  // Text settings
+  textColor?: string
+  onTextColorChange?: (color: string) => void
+  fontSize?: number
+  onFontSizeChange?: (size: number) => void
+  // Selected text
+  selectedTextIndex?: number | null
+  onSelectedTextChange?: (index: number | null) => void
+  // Text input
+  showTextInput?: boolean
+  onShowTextInputChange?: (show: boolean) => void
+  isEditingText?: boolean
+  onIsEditingTextChange?: (editing: boolean) => void
+  // Actions
+  onUploadImage?: () => void
+  onSaveCanvas?: () => void
 }
 
 // Custom hooks với proper TypeScript types
@@ -99,7 +123,7 @@ const useKeyboardShortcuts = (
   selectedTextIndex: number | null,
   texts: TextObject[],
   setTexts: React.Dispatch<React.SetStateAction<TextObject[]>>,
-  setSelectedTextIndex: React.Dispatch<React.SetStateAction<number | null>>,
+  setSelectedTextIndex: (index: number | null) => void,
   closeTextInput: () => void,
   canvasRef: React.RefObject<HTMLCanvasElement>
 ) => {
@@ -156,35 +180,100 @@ const useImagePaste = (
   }, [canvasRef, loadImage])
 }
 
-const Canvas: React.FC<CanvasProps> = ({ id = 'canvas', onCanvasReady }) => {
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const textInputRef = useRef<HTMLInputElement>(null)
+const Canvas: React.FC<CanvasProps> = ({ 
+  // id = 'canvas', (unused)
+  onCanvasReady,
+  // Tool states from parent
+  tool: externalTool,
+  onToolChange,
+  // Pen settings
+  penColor: externalPenColor,
+  // onPenColorChange, (unused)
+  penSize: externalPenSize,
+  // onPenSizeChange, (unused)
+  // Text settings
+  textColor: externalTextColor,
+  // onTextColorChange, (unused)
+  fontSize: externalFontSize,
+  // onFontSizeChange, (unused)
+  // Selected text
+  selectedTextIndex: externalSelectedTextIndex,
+  onSelectedTextChange,
+  // Text input
+  showTextInput: externalShowTextInput,
+  onShowTextInputChange,
+  isEditingText: externalIsEditingText,
+  onIsEditingTextChange,
+  // Actions
+  // onUploadImage: externalOnUploadImage, (unused)
+  // onSaveCanvas: externalOnSaveCanvas (unused)
+}) => {
+  // Color palette for text
+  const colorPalette = [
+    '#000000', // Black
+    '#FFFFFF', // White
+    '#FF0000', // Red
+    '#00FF00', // Green
+    '#0000FF', // Blue
+    '#FFFF00', // Yellow
+    '#FF00FF', // Magenta
+    '#00FFFF', // Cyan
+    '#FFA500', // Orange
+    '#800080', // Purple
+    '#FFC0CB', // Pink
+    '#A52A2A', // Brown
+    '#808080', // Gray
+    '#90EE90', // Light Green
+    '#87CEEB', // Sky Blue
+    '#DDA0DD'  // Plum
+  ]
+
+  // const fileInputRef = useRef<HTMLInputElement>(null) (unused)
+  const textInputRef = useRef<HTMLTextAreaElement>(null)
   
   // Canvas setup
   const { canvasRef, ctx } = useCanvasSetup(onCanvasReady)
   
+  // Use external states if provided, otherwise use internal states
+  const [internalTool, setInternalTool] = useState<Tool>(null)
+  // const [internalPenColor, setInternalPenColor] = useState<string>('#000000') (unused)
+  // const [internalPenSize, setInternalPenSize] = useState<number>(5) (unused)
+  // const [internalTextColor, setInternalTextColor] = useState<string>('#000000') (unused)
+  // const [internalFontSize, setInternalFontSize] = useState<number>(20) (unused)
+  const [internalSelectedTextIndex, setInternalSelectedTextIndex] = useState<number | null>(null)
+  const [internalShowTextInput, setInternalShowTextInput] = useState<boolean>(false)
+  const [internalIsEditingText, setInternalIsEditingText] = useState<boolean>(false)
+
+  // Use external props if available, otherwise use internal state
+  const tool = externalTool !== undefined ? externalTool : internalTool
+  const setTool = onToolChange || setInternalTool
+  const penColor = externalPenColor !== undefined ? externalPenColor : '#000000'
+  // const setPenColor = onPenColorChange || setInternalPenColor (unused)
+  const penSize = externalPenSize !== undefined ? externalPenSize : 5
+  // const setPenSize = onPenSizeChange || setInternalPenSize (unused)
+  const textColor = externalTextColor !== undefined ? externalTextColor : '#000000'
+  // const setTextColor = onTextColorChange || setInternalTextColor (unused)
+  const fontSize = externalFontSize !== undefined ? externalFontSize : 20
+  // const setFontSize = onFontSizeChange || setInternalFontSize (unused)
+  const selectedTextIndex = externalSelectedTextIndex !== undefined ? externalSelectedTextIndex : internalSelectedTextIndex
+  const setSelectedTextIndex = onSelectedTextChange || setInternalSelectedTextIndex
+  const showTextInput = externalShowTextInput !== undefined ? externalShowTextInput : internalShowTextInput
+  const setShowTextInput = onShowTextInputChange || setInternalShowTextInput
+  const isEditingText = externalIsEditingText !== undefined ? externalIsEditingText : internalIsEditingText
+  const setIsEditingText = onIsEditingTextChange || setInternalIsEditingText
+
   // Canvas focus state
   const [isFocused, setIsFocused] = useState<boolean>(false)
   
   // Drawing states
   const [isDrawing, setIsDrawing] = useState<boolean>(false)
-  const [tool, setTool] = useState<Tool>(null)
   
-  // Pen settings
-  const [penColor, setPenColor] = useState<string>('#000000')
-  const [penSize, setPenSize] = useState<number>(5)
-  
-  // Text settings
-  const [textColor, setTextColor] = useState<string>('#000000')
-  const [fontSize, setFontSize] = useState<number>(20)
+  // Other internal states
   const [texts, setTexts] = useState<TextObject[]>([])
-  const [selectedTextIndex, setSelectedTextIndex] = useState<number | null>(null)
-  
-  // Text input states
   const [textInput, setTextInput] = useState<string>('')
-  const [showTextInput, setShowTextInput] = useState<boolean>(false)
   const [textPosition, setTextPosition] = useState<Position>({ x: 0, y: 0 })
-  const [isEditingText, setIsEditingText] = useState<boolean>(false)
+  const [dialogTextColor, setDialogTextColor] = useState<string>('#000000')
+  const [dialogFontSize, setDialogFontSize] = useState<number>(16)
   
   // Drag states
   const [isDraggingText, setIsDraggingText] = useState<boolean>(false)
@@ -192,10 +281,10 @@ const Canvas: React.FC<CanvasProps> = ({ id = 'canvas', onCanvasReady }) => {
   
   // Image states
   const [image, setImage] = useState<HTMLImageElement | null>(null)
-  const [hasImage, setHasImage] = useState<boolean>(false)
-
-  // Color options
-  const colorOptions: string[] = ['#000000', '#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#00FFFF']
+  // const [hasImage, setHasImage] = useState<boolean>(false) (unused)
+  
+  // Color options for pen
+  // const colorOptions: string[] = ['#000000', '#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#00FFFF'] (unused)
 
   // Drawing functions
   const drawAll = useCallback(() => {
@@ -262,7 +351,7 @@ const Canvas: React.FC<CanvasProps> = ({ id = 'canvas', onCanvasReady }) => {
     img.onload = () => {
       if (!ctx || !canvasRef.current) return
       setImage(img)
-      setHasImage(true)
+      // setHasImage(true) (unused)
       drawAll()
     }
     img.onerror = () => {
@@ -305,6 +394,18 @@ const Canvas: React.FC<CanvasProps> = ({ id = 'canvas', onCanvasReady }) => {
     setSelectedTextIndex(texts.length)
   }, [fontSize, textColor, texts.length])
 
+  // ...existing code ...
+  // const openTextInput = useCallback((x: number, y: number) => {
+  //   setTextPosition({ x, y })
+  //   setTextInput('')
+  //   setIsEditingText(false)
+  //   setShowTextInput(true)
+  //   // Set dialog values from current header values or defaults
+  //   setDialogTextColor(textColor)
+  //   setDialogFontSize(fontSize)
+  //   setTimeout(() => textInputRef.current?.focus(), 100)
+  // }, [textColor, fontSize]) (unused)
+
   const confirmAddText = useCallback(() => {
     const trimmed = textInput?.trim() ?? ''
     if (!trimmed) {
@@ -318,24 +419,24 @@ const Canvas: React.FC<CanvasProps> = ({ id = 'canvas', onCanvasReady }) => {
         copy[selectedTextIndex] = {
           ...copy[selectedTextIndex],
           text: trimmed,
-          fontSize,
-          color: textColor
+          fontSize: dialogFontSize,
+          color: dialogTextColor
         }
         return copy
       })
     } else {
-      addTextAt(textPosition.x, textPosition.y, trimmed, fontSize, textColor)
+      addTextAt(textPosition.x, textPosition.y, trimmed, dialogFontSize, dialogTextColor)
     }
 
     closeTextInput()
-  }, [textInput, isEditingText, selectedTextIndex, fontSize, textColor, textPosition, addTextAt, closeTextInput])
+  }, [textInput, isEditingText, selectedTextIndex, dialogFontSize, dialogTextColor, textPosition, addTextAt, closeTextInput])
 
-  const deleteSelectedText = useCallback(() => {
-    if (selectedTextIndex !== null) {
-      setTexts(prev => prev.filter((_, i) => i !== selectedTextIndex))
-      setSelectedTextIndex(null)
-    }
-  }, [selectedTextIndex])
+  // const deleteSelectedText = useCallback(() => {
+  //   if (selectedTextIndex !== null) {
+  //     setTexts(prev => prev.filter((_, i) => i !== selectedTextIndex))
+  //     setSelectedTextIndex(null)
+  //   }
+  // }, [selectedTextIndex]) (unused)
 
   const editSelectedText = useCallback(() => {
     if (selectedTextIndex === null) return
@@ -346,8 +447,9 @@ const Canvas: React.FC<CanvasProps> = ({ id = 'canvas', onCanvasReady }) => {
     setIsEditingText(true)
     setTool('text')
     setShowTextInput(true)
-    setFontSize(selectedText.fontSize)
-    setTextColor(selectedText.color)
+    // Set dialog values from selected text
+    setDialogTextColor(selectedText.color)
+    setDialogFontSize(selectedText.fontSize)
     
     setTimeout(() => textInputRef.current?.focus(), 100)
   }, [selectedTextIndex, texts])
@@ -450,20 +552,29 @@ const Canvas: React.FC<CanvasProps> = ({ id = 'canvas', onCanvasReady }) => {
     }
   }, [getTextIndexAt, editSelectedText])
 
-  const handleFileUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file || !file.type.startsWith('image/')) return
-    loadImage(URL.createObjectURL(file))
-  }, [loadImage])
+  // const handleFileUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+  //   const file = e.target.files?.[0]
+  //   if (!file || !file.type.startsWith('image/')) return
+  //   loadImage(URL.createObjectURL(file))
+  // }, [loadImage]) (unused)
 
-  const saveCanvas = useCallback(() => {
-    if (!canvasRef.current) return
-    
-    const link = document.createElement('a')
-    link.download = `canvas-drawing-${id}.png`
-    link.href = canvasRef.current.toDataURL()
-    link.click()
-  }, [id])
+  // const saveCanvas = useCallback(() => {
+  //   if (!canvasRef.current) return
+  //   
+  //   const link = document.createElement('a')
+  //   link.download = `canvas-drawing-${id}.png`
+  //   link.href = canvasRef.current.toDataURL()
+  //   link.click()
+  // }, [id]) (unused)
+
+  // Use external handlers if provided
+  // const handleUploadImage = useCallback(() => {
+  //   if (externalOnUploadImage) {
+  //     externalOnUploadImage()
+  //   } else {
+  //     fileInputRef.current?.click()
+  //   }
+  // }, [externalOnUploadImage]) (unused)
 
   // Initialize text position
   useEffect(() => {
@@ -497,199 +608,98 @@ const Canvas: React.FC<CanvasProps> = ({ id = 'canvas', onCanvasReady }) => {
         )}
       </div>
 
-      {/* Toolbar */}
-      <div className="bg-gray-50 rounded-lg p-4 shadow-sm">
-        <div className="flex flex-wrap items-center gap-3 mb-3">
-          <Button 
-            variant={tool === 'pen' ? 'default' : 'outline'} 
-            size="sm" 
-            onClick={() => setTool('pen')}
-            className="flex items-center gap-2"
-          >
-            <PenTool size={16} />
-            Bút vẽ
-          </Button>
-          
-          <Button 
-            variant={tool === 'text' ? 'default' : 'outline'} 
-            size="sm" 
-            onClick={() => { setTool('text'); setShowTextInput(true); setIsEditingText(false); }}
-            className="flex items-center gap-2"
-          >
-            <Type size={16} />
-            Thêm Text
-          </Button>
-          
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => fileInputRef.current?.click()}
-            className="flex items-center gap-2"
-          >
-            <Upload size={16} />
-            Tải ảnh
-          </Button>
-          
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={saveCanvas}
-            className="flex items-center gap-2"
-          >
-            <Save size={16} />
-            Lưu ảnh
-          </Button>
-          
-          <input 
-            type="file" 
-            ref={fileInputRef} 
-            onChange={handleFileUpload} 
-            accept="image/*" 
-            className="hidden" 
-          />
-        </div>
 
-        {/* Text controls */}
-        {selectedTextIndex !== null && (
-          <div className="flex items-center gap-2 p-2 bg-blue-50 rounded-md border border-blue-200">
-            <span className="text-sm font-medium">Text đã chọn:</span>
-            <Button 
-              size="sm" 
-              variant="outline"
-              onClick={editSelectedText}
-              className="flex items-center gap-1"
-            >
-              <Edit size={14} />
-              Sửa
-            </Button>
-            <Button 
-              size="sm" 
-              variant="destructive"
-              onClick={deleteSelectedText}
-              className="flex items-center gap-1"
-            >
-              <Trash2 size={14} />
-              Xóa
-            </Button>
-          </div>
-        )}
 
-        {/* Tool-specific controls */}
-        {tool === 'pen' && (
-          <div className="flex items-center gap-4 mt-2">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium">Màu:</span>
-              <div className="flex gap-1">
-                {colorOptions.map((color) => (
-                  <div
-                    key={color}
-                    className={cn(
-                      "w-6 h-6 rounded-full cursor-pointer border-2",
-                      penColor === color ? "border-gray-800" : "border-gray-300"
-                    )}
-                    style={{ backgroundColor: color }}
-                    onClick={() => setPenColor(color)}
-                  />
-                ))}
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium">Nét: {penSize}px</span>
-              <Slider
-                value={[penSize]}
-                min={1}
-                max={20}
-                step={1}
-                onValueChange={(value) => setPenSize(value[0])}
-                className="w-24"
-              />
-            </div>
-          </div>
-        )}
-
-        {tool === 'text' && (
-          <div className="flex items-center gap-4 mt-2">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium">Màu:</span>
-              <div className="flex gap-1">
-                {colorOptions.map((color) => (
-                  <div
-                    key={color}
-                    className={cn(
-                      "w-6 h-6 rounded-full cursor-pointer border-2",
-                      textColor === color ? "border-gray-800" : "border-gray-300"
-                    )}
-                    style={{ backgroundColor: color }}
-                    onClick={() => setTextColor(color)}
-                  />
-                ))}
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium">Cỡ chữ: {fontSize}px</span>
-              <Slider
-                value={[fontSize]}
-                min={12}
-                max={72}
-                step={1}
-                onValueChange={(value) => setFontSize(value[0])}
-                className="w-24"
-              />
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Text input */}
+      {/* Text input dialog */}
       {showTextInput && (
-        <div className="flex items-center gap-2 p-3 bg-yellow-50 rounded-md border border-yellow-200">
-          <input
-            ref={textInputRef}
-            type="text"
-            value={textInput}
-            onChange={(e) => setTextInput(e.target.value)}
-            placeholder="Nhập text..."
-            className="flex-1 h-10 rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            autoFocus
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') confirmAddText()
-              if (e.key === 'Escape') closeTextInput()
-            }}
-          />
-          <Button size="sm" onClick={confirmAddText}>
-            {isEditingText ? 'Cập nhật' : 'Thêm'}
-          </Button>
-          <Button size="sm" variant="outline" onClick={closeTextInput}>
-            Hủy
-          </Button>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold mb-4">
+              {isEditingText ? 'Sửa text' : 'Thêm text mới'}
+            </h3>
+            <textarea
+              ref={textInputRef}
+              value={textInput}
+              onChange={(e) => setTextInput(e.target.value)}
+              placeholder="Nhập text..."
+              className="w-full p-3 border border-gray-300 rounded-md resize-none mb-4"
+              rows={3}
+              autoFocus
+            />
+            
+            {/* Color and Size Controls */}
+            <div className="space-y-4 mb-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Màu sắc
+                </label>
+                <div className="grid grid-cols-8 gap-2">
+                  {colorPalette.map((color) => (
+                    <button
+                      key={color}
+                      type="button"
+                      onClick={() => setDialogTextColor(color)}
+                      className={`w-8 h-8 rounded border-2 transition-all hover:scale-110 ${
+                        dialogTextColor === color 
+                          ? 'border-gray-800 ring-2 ring-blue-500' 
+                          : 'border-gray-300 hover:border-gray-500'
+                      }`}
+                      style={{ backgroundColor: color }}
+                      title={color}
+                    >
+                      {color === '#FFFFFF' && (
+                        <div className="w-full h-full rounded border border-gray-200" />
+                      )}
+                    </button>
+                  ))}
+                </div>
+                <div className="mt-2 text-sm text-gray-600">
+                  Màu đã chọn: {dialogTextColor}
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Kích thước: {dialogFontSize}px
+                </label>
+                <Slider
+                  value={[dialogFontSize]}
+                  onValueChange={(value) => setDialogFontSize(value[0])}
+                  min={8}
+                  max={72}
+                  step={1}
+                  className="w-full"
+                />
+              </div>
+            </div>
+            
+            <div className="flex gap-2">
+              <Button onClick={confirmAddText} className="flex-1">
+                {isEditingText ? 'Cập nhật' : 'Thêm'}
+              </Button>
+              <Button variant="outline" onClick={closeTextInput} className="flex-1">
+                Hủy
+              </Button>
+            </div>
+          </div>
         </div>
       )}
 
-      {/* Canvas */}
-      <div className="canvas-container relative border-2 border-dashed border-gray-300 rounded-lg overflow-hidden">
-        {!hasImage && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-500 pointer-events-none bg-gray-50">
-            <p className="text-lg font-medium mb-2">Click để focus, rồi paste ảnh (Ctrl+V)</p>
-            <p className="text-sm">Hoặc tải ảnh bằng nút "Tải ảnh"</p>
-          </div>
-        )}
+      {/* Canvas container */}
+      <div className="relative border border-gray-300 rounded-lg overflow-hidden bg-white">
         <canvas
           ref={canvasRef}
-          id={id}
-          className={cn(
-            "w-full h-full cursor-crosshair outline-none",
-            isFocused ? "ring-2 ring-blue-500" : ""
-          )}
-          tabIndex={0}
-          onFocus={handleCanvasFocus}
-          onBlur={handleCanvasBlur}
+          width={800}
+          height={600}
+          className="block cursor-crosshair"
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseUp}
           onDoubleClick={handleDoubleClick}
+          onFocus={handleCanvasFocus}
+          onBlur={handleCanvasBlur}
+          tabIndex={0}
         />
       </div>
     </div>

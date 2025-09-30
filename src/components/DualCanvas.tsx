@@ -10,7 +10,60 @@ import {
 } from '@/components/ui/dialog';
 import { mergeImages, downloadImage, copyToClipboard } from '@/lib/utils';
 
-const DualCanvas: React.FC = () => {
+interface DualCanvasProps {
+  // Tool states
+  tool?: 'pen' | 'text' | null;
+  onToolChange?: (tool: 'pen' | 'text' | null) => void;
+  
+  // Pen settings
+  penColor?: string;
+  onPenColorChange?: (color: string) => void;
+  penSize?: number;
+  onPenSizeChange?: (size: number) => void;
+  
+  // Text settings
+  textColor?: string;
+  onTextColorChange?: (color: string) => void;
+  fontSize?: number;
+  onFontSizeChange?: (size: number) => void;
+  
+  // Selected text
+  selectedTextIndex?: number | null;
+  onSelectedTextChange?: (index: number | null) => void;
+  
+  // Text input
+  showTextInput?: boolean;
+  onShowTextInputChange?: (show: boolean) => void;
+  isEditingText?: boolean;
+  onIsEditingTextChange?: (editing: boolean) => void;
+  
+  // Actions
+  onUploadImage?: () => void;
+  onSaveCanvas?: () => void;
+  onMergeImages?: () => void;
+}
+
+const DualCanvas: React.FC<DualCanvasProps> = ({
+  tool,
+  onToolChange,
+  penColor,
+  onPenColorChange,
+  penSize,
+  onPenSizeChange,
+  textColor,
+  onTextColorChange,
+  fontSize,
+  onFontSizeChange,
+  selectedTextIndex,
+  onSelectedTextChange,
+  showTextInput,
+  onShowTextInputChange,
+  isEditingText,
+  onIsEditingTextChange,
+  onUploadImage,
+  onSaveCanvas,
+  onMergeImages: externalOnMergeImages
+}) => {
   // canvas element refs
   const leftCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const rightCanvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -29,6 +82,16 @@ const DualCanvas: React.FC = () => {
     rightCanvasRef.current = canvas;
   };
 
+  // Listen for merge trigger from toolbar
+  React.useEffect(() => {
+    const handleTriggerMerge = () => {
+      handleMergeImages()
+    }
+
+    window.addEventListener('triggerMerge', handleTriggerMerge)
+    return () => window.removeEventListener('triggerMerge', handleTriggerMerge)
+  }, [])
+
   // merge two canvases
   const handleMergeImages = () => {
     if (!leftCanvasRef.current || !rightCanvasRef.current) {
@@ -39,6 +102,11 @@ const DualCanvas: React.FC = () => {
     const mergedUrl = mergeImages(leftCanvasRef.current, rightCanvasRef.current);
     setMergedImageUrl(mergedUrl);
     setShowExportDialog(true);
+    
+    // Call external handler if provided
+    if (externalOnMergeImages) {
+      externalOnMergeImages();
+    }
   };
 
   // save image
@@ -74,18 +142,56 @@ const DualCanvas: React.FC = () => {
     <div className="flex flex-col gap-4">
       <div className="dual-canvas-container">
         <div className="canvas-wrapper">
-          <Canvas id="left-canvas" onCanvasReady={handleLeftCanvasReady} />
+          <Canvas 
+            id="left-canvas" 
+            onCanvasReady={handleLeftCanvasReady}
+            tool={tool}
+            onToolChange={onToolChange}
+            penColor={penColor}
+            onPenColorChange={onPenColorChange}
+            penSize={penSize}
+            onPenSizeChange={onPenSizeChange}
+            textColor={textColor}
+            onTextColorChange={onTextColorChange}
+            fontSize={fontSize}
+            onFontSizeChange={onFontSizeChange}
+            selectedTextIndex={selectedTextIndex}
+            onSelectedTextChange={onSelectedTextChange}
+            showTextInput={showTextInput}
+            onShowTextInputChange={onShowTextInputChange}
+            isEditingText={isEditingText}
+            onIsEditingTextChange={onIsEditingTextChange}
+            onUploadImage={onUploadImage}
+            onSaveCanvas={onSaveCanvas}
+          />
         </div>
         <div className="canvas-wrapper">
-          <Canvas id="right-canvas" onCanvasReady={handleRightCanvasReady} />
+          <Canvas 
+            id="right-canvas" 
+            onCanvasReady={handleRightCanvasReady}
+            tool={tool}
+            onToolChange={onToolChange}
+            penColor={penColor}
+            onPenColorChange={onPenColorChange}
+            penSize={penSize}
+            onPenSizeChange={onPenSizeChange}
+            textColor={textColor}
+            onTextColorChange={onTextColorChange}
+            fontSize={fontSize}
+            onFontSizeChange={onFontSizeChange}
+            selectedTextIndex={selectedTextIndex}
+            onSelectedTextChange={onSelectedTextChange}
+            showTextInput={showTextInput}
+            onShowTextInputChange={onShowTextInputChange}
+            isEditingText={isEditingText}
+            onIsEditingTextChange={onIsEditingTextChange}
+            onUploadImage={onUploadImage}
+            onSaveCanvas={onSaveCanvas}
+          />
         </div>
       </div>
 
-      <div className="flex justify-center mt-4">
-        <Button onClick={handleMergeImages} className="px-8">
-          Ghép & Xuất ảnh
-        </Button>
-      </div>
+      {/* Removed the duplicate merge button since it's now available in toolbar */}
 
       <Dialog open={showExportDialog} onOpenChange={setShowExportDialog}>
         <DialogContent className="sm:max-w-md">
