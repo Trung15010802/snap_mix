@@ -92,6 +92,24 @@ const DualCanvas: React.FC<DualCanvasProps> = ({
     return () => window.removeEventListener('triggerMerge', handleTriggerMerge)
   }, [])
 
+  // Listen for save trigger from toolbar
+  React.useEffect(() => {
+    const handleTriggerSave = (e: CustomEvent) => {
+      const { activeTab } = e.detail
+      if (activeTab === 'dual') {
+        // Save merged image if both canvases have content
+        if (leftCanvasRef.current && rightCanvasRef.current) {
+          handleMergeImages()
+        } else {
+          alert('Vui lòng thêm ảnh vào cả hai khung trước khi lưu')
+        }
+      }
+    }
+
+    window.addEventListener('triggerSave', handleTriggerSave as EventListener)
+    return () => window.removeEventListener('triggerSave', handleTriggerSave as EventListener)
+  }, [])
+
   // merge two canvases
   const handleMergeImages = () => {
     if (!leftCanvasRef.current || !rightCanvasRef.current) {

@@ -592,6 +592,21 @@ const Canvas: React.FC<CanvasProps> = ({
   useKeyboardShortcuts(selectedTextIndex, texts, setTexts, setSelectedTextIndex, closeTextInput, canvasRef)
   useImagePaste(canvasRef, loadImage)
 
+  // Listen for save event from toolbar
+  useEffect(() => {
+    const handleSave = (e: CustomEvent) => {
+      if (!canvasRef.current) return
+      
+      const link = document.createElement('a')
+      link.download = `canvas-drawing-${Date.now()}.png`
+      link.href = canvasRef.current.toDataURL()
+      link.click()
+    }
+
+    window.addEventListener('triggerSave', handleSave as EventListener)
+    return () => window.removeEventListener('triggerSave', handleSave as EventListener)
+  }, [])
+
   // Redraw when state changes
   useEffect(() => {
     drawAll()
@@ -599,17 +614,6 @@ const Canvas: React.FC<CanvasProps> = ({
 
   return (
     <div className="flex flex-col gap-4 p-4">
-      {/* Canvas title */}
-      <div className="flex items-center justify-between">
-        {isFocused && (
-          <span className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded">
-            Đang focus - Paste ảnh ở đây
-          </span>
-        )}
-      </div>
-
-
-
       {/* Text input dialog */}
       {showTextInput && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -686,7 +690,11 @@ const Canvas: React.FC<CanvasProps> = ({
       )}
 
       {/* Canvas container */}
-      <div className="relative border border-gray-300 rounded-lg overflow-hidden bg-white">
+      <div className={`relative rounded-lg overflow-hidden bg-white transition-all duration-200 ${
+        isFocused 
+          ? 'border-2 border-blue-500 shadow-lg shadow-blue-200' 
+          : 'border border-gray-300'
+      }`}>
         <canvas
           ref={canvasRef}
           width={800}

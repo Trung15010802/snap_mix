@@ -37,8 +37,9 @@ function App(): JSX.Element {
   }
 
   const handleSaveCanvas = () => {
-    // This would trigger save in the active canvas
-    console.log('Save canvas for tab:', activeTab)
+    // Trigger save in the active canvas component
+    const event = new CustomEvent('triggerSave', { detail: { activeTab } })
+    window.dispatchEvent(event)
   }
 
   const handleMergeImages = () => {
