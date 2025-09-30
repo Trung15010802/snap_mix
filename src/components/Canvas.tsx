@@ -594,7 +594,7 @@ const Canvas: React.FC<CanvasProps> = ({
 
   // Listen for save event from toolbar
   useEffect(() => {
-    const handleSave = (e: CustomEvent) => {
+    const handleSave = () => {
       if (!canvasRef.current) return
       
       const link = document.createElement('a')
