@@ -607,6 +607,18 @@ const Canvas: React.FC<CanvasProps> = ({
     return () => window.removeEventListener('triggerSave', handleSave as EventListener)
   }, [])
 
+  useEffect(() => {
+    const handleDeleteText = () => {
+      if (selectedTextIndex !== null) {
+        setTexts(prev => prev.filter((_, i) => i !== selectedTextIndex))
+        setSelectedTextIndex(null)
+      }
+    }
+
+    window.addEventListener('triggerDeleteText', handleDeleteText as EventListener)
+    return () => window.removeEventListener('triggerDeleteText', handleDeleteText as EventListener)
+  }, [selectedTextIndex, setTexts, setSelectedTextIndex]);
+
   // Redraw when state changes
   useEffect(() => {
     drawAll()

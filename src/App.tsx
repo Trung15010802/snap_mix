@@ -57,8 +57,8 @@ function App(): JSX.Element {
 
   const handleDeleteSelectedText = () => {
     if (selectedTextIndex !== null) {
-      setSelectedTextIndex(null)
-      console.log('Delete selected text')
+      const event = new CustomEvent('triggerDeleteText');
+      window.dispatchEvent(event);
     }
   }
 
